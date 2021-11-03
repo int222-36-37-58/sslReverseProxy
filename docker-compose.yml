@@ -1,46 +1,23 @@
-server {      #Monitor port 443
-    listen    443 ssl;
-    server_name  onlineinwshop.ddns.net;             #domain name
-
-    # Add ssl
-    ssl on;        #If you force HTTP access, this line should be opened
-    ssl_certificate /ssl/onlineinwshop.ddns.net.crt;   #The crt file storage path of nginx for ssl certificate of domain name application
-    ssl_certificate_key /ssl/onlineinwshop.ddns.net.key;      #Storage path of nginx key file of ssl certificate for domain name application
-
-    ssl_session_cache    shared:SSL:1m;
-    ssl_session_timeout  5m;
-
-     # Specify the password as a format supported by openssl
-     ssl_protocols  SSLv2 SSLv3 TLSv1.2;
-
-     ssl_ciphers  HIGH:!aNULL:!MD5;  # Password encryption method
-     ssl_prefer_server_ciphers  on;   # Server passwords that rely on SSLv3 and TLSv1 protocols will take precedence over client passwords
-
-     # Define the index directory and name of the first page        
-     location / {
-        root   /usr/share/nginx/html;
-        index  index.html index.htm;
-     }
-    
-    #Redirect error page to / 50x.html
-    error_page   500 502 503 504  /50x.html;
-    location = /50x.html {
-        root   /usr/share/nginx/html;
-    }
-
-    location / {
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_pass https://172.22.0.3;
-    }
-    location /backend/ {
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_pass https://172.22.0.4:3000/;
-    }
-}
-server{   #Monitor port 80
-    listen 80;
-    server_name onlineinwshop.ddns.net; 
-    rewrite ^(.*) https://$host$1 permanent;      # All connections that arrive here are converted to https
-}
+version: '3'
+services:
+ sslReverseProxy:
+    container_name: sslReverseProxy
+    image: nginx
+    volumes:
+         - /home/dohttps/nginx/data:/usr/share/nginx/html:rw
+         - /home/dohttps/nginx/config/nginx.conf:/etc/nginx/nginx.conf/:rw
+         - /home/dohttps/nginx/config/conf.d/default.conf:/etc/nginx/conf.d/default.conf:rw 
+         - /home/dohttps/nginx/logs:/var/log/nginx/:rw  
+         - /home/dohttps/nginx/ssl:/ssl/:rw
+    ports:
+         - "80:80"
+         - "443:443"
+    networks:
+       docker_network:
+          ipv4_address: 172.22.0.10
+networks:
+  default:
+    external:
+       name: docker_network
+  docker_network:
+    external: true
