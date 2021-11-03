@@ -40,7 +40,7 @@ server {      #Monitor port 443
     }
 }
 server{   #Monitor port 80
-	listen 80;
-    	server_name onlineinwshop.ddns.net; 
-    	rewrite ^(.*) https://$host$1 permanent;      # All connections that arrive here are converted to https
+    listen 80;
+    server_name onlineinwshop.ddns.net; 
+    rewrite ^(.*) https://$host$1 permanent;      # All connections that arrive here are converted to https
 }
